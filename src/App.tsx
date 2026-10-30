@@ -1,4 +1,5 @@
 import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Suspense } from "react";
 import { AuthModal } from "./auth/AuthModal";
 import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
@@ -34,11 +35,20 @@ export default function App() {
     <div className="min-h-screen bg-navy text-white">
       <NavBar />
       <Routes>
-        <Route path="/" element={<IntroPage />} />
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-navy text-white" />}>
+              <IntroPage />
+            </Suspense>
+          }
+        />
         <Route path="/world" element={<WorldPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
       <AuthModal />
+      {/* Global AI guide: mounted once so it survives route changes. */}
+      <ChatLauncher />
     </div>
   );
 }

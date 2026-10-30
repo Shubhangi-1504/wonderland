@@ -74,12 +74,15 @@ export function CameraRig() {
       tmpPos.y += Math.sin(t * 0.31) * 1.2;
     }
 
-    /* 4. crash shake */
+    /* 4. crash shake: small, damped, scaled by crashLevel */
     const crash = store.crashLevel;
     if (crash > 0 && !profile.reducedMotion) {
       const t = state.clock.elapsedTime;
+      // positional shake (decays quickly so it stays subtle)
       tmpPos.x += Math.sin(t * 13.3) * 0.7 * crash;
       tmpPos.y += Math.sin(t * 17.7) * 0.5 * crash;
+      // rotational shake (velocity-damped)
+      tmpPos.z += Math.sin(t * 9.1) * 0.004 * crash * 3.0;
     }
 
     /* 5. enter-the-world dash */
