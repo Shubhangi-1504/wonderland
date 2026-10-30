@@ -7,6 +7,7 @@ import {
   enterState,
   introTiming,
   scrollRuntime,
+  startEnterWorld,
   uniforms,
   useSceneStore,
 } from '../sceneStore';

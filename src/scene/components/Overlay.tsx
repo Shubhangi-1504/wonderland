@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { startEnterWorld, useSceneStore } from '../sceneStore';
+import { enterState, useSceneStore } from '../sceneStore';
 import { scrollToScene } from './ScrollStage';
 
 /** @see src/scene/sceneStore.ts — used by ?debug Replay. */

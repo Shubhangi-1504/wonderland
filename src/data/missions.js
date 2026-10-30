@@ -153,3 +153,5 @@ export const ACHIEVEMENTS = [
     reward: 'Analyst Ribbon'
   }
 ];
+
+export const MISSIONS_DATA = MISSIONS;

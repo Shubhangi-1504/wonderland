@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import StockMarketCity from "../components/City/StockMarketCity";
 import GameHUD from "../components/UI/GameHUD";
 import BuildingInteraction from "../components/Buildings/BuildingInteraction";
@@ -235,35 +235,35 @@ export function WorldPage() {
       )}
 
       {/* Global Notifications for Level Ups, Badge Unlocks, and XP rewards */}
-      {activeNotification?.type === "badge" && (
+      {(activeNotification as any)?.type === "badge" && (
         <BadgeUnlockNotification
-          badge={activeNotification.badge}
-          bonusXp={activeNotification.bonusXp}
+          badge={(activeNotification as any).badge}
+          bonusXp={(activeNotification as any).bonusXp}
           onDismiss={dismissNotification}
         />
       )}
 
-      {activeNotification?.type === "levelup" && (
+      {(activeNotification as any)?.type === "levelup" && (
         <LevelUpNotification
-          oldLevel={activeNotification.oldLevel}
-          newLevel={activeNotification.newLevel}
-          newTitle={activeNotification.newTitle}
+          oldLevel={(activeNotification as any).oldLevel}
+          newLevel={(activeNotification as any).newLevel}
+          newTitle={(activeNotification as any).newTitle}
           onDismiss={dismissNotification}
         />
       )}
 
-      {activeNotification?.type === "xp" && (
+      {(activeNotification as any)?.type === "xp" && (
         <XPRewardAnimation
-          amount={activeNotification.amount}
-          source={activeNotification.source}
+          amount={(activeNotification as any).amount}
+          source={(activeNotification as any).source}
           onDismiss={dismissNotification}
         />
       )}
 
       {/* Celebratory Particle / Confetti System */}
       {(showConfetti ||
-        activeNotification?.type === "levelup" ||
-        activeNotification?.type === "badge") && (
+        (activeNotification as any)?.type === "levelup" ||
+        (activeNotification as any)?.type === "badge") && (
         <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
       )}
     </main>
