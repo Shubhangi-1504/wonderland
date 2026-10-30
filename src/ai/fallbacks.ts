@@ -17,24 +17,38 @@ const GENERIC =
 
 /** 2–4 sentence answers so the demo never shows a dead end. */
 function portfolioChange(context?: GuidePayload): string {
-  const holdings = context?.portfolio.holdings ?? [];
-  const event = context?.lastEvent;
+  const facts = context?.facts;
 
-  if (!event) {
+  if (!facts || (!facts.hasResult && !facts.hasHoldings)) {
+    return "You have no portfolio data to explain yet — there are no holdings and no saved scenario. Add a few virtual shares, run a simulated crash, then ask me again.";
+  }
+  if (!facts.hasResult) {
     return "I don't have a saved scenario result yet, so I can't explain a change. Run a scripted event in the simulator, then ask me again — I'll compare your before and after totals.";
   }
-  if (holdings.length === 0) {
-    return `Your portfolio held no stocks during "${event.title}", so the event mostly left your cash untouched. Buy a few virtual shares, replay an event, and I can show how concentration and sector exposure change the outcome.`;
+  if (!facts.hasHoldings) {
+    return `In the simulated event "${facts.title}", you held no stocks, so your cash was unaffected. Buy a few virtual shares, replay an event, and I can show how concentration and sector exposure change the outcome.`;
   }
 
-  const totalChange = event.before > 0 ? ((event.after - event.before) / event.before) * 100 : 0;
-  const worst = [...event.perHolding].sort((a, b) => a.changePct - b.changePct)[0];
-  const best = [...event.perHolding].sort((a, b) => b.changePct - a.changePct)[0];
-  const mover = worst
-    ? ` The biggest drag was ${worst.symbol} at ${worst.changePct.toFixed(1)}%${best && best.symbol !== worst.symbol ? `, while ${best.symbol} moved ${best.changePct.toFixed(1)}%` : ""}.`
-    : "";
-
-  return `In the simulated event "${event.title}", your portfolio went from ${money(event.before)} to ${money(event.after)}, a ${totalChange.toFixed(1)}% change.${mover} Remember this is a scripted game event, not real market data.`;
+  const parts = [
+    `In the simulated event "${facts.title}", your portfolio went from ${money(facts.totalBefore)} to ${money(facts.totalAfter)}, a ${facts.totalChangePct.toFixed(1)}% change.`,
+  ];
+  if (facts.worstHolding) {
+    const best =
+      facts.bestHolding && facts.bestHolding.symbol !== facts.worstHolding.symbol
+        ? `, while ${facts.bestHolding.symbol} moved ${facts.bestHolding.changePct.toFixed(1)}%`
+        : "";
+    parts.push(
+      `The biggest drag was ${facts.worstHolding.symbol} at ${facts.worstHolding.changePct.toFixed(1)}%${best}.`,
+    );
+  }
+  const top = facts.sectorExposure[0];
+  if (facts.concentrationFlag && top) {
+    parts.push(
+      `Concentration mattered: ${top.sector} was ${top.pct.toFixed(0)}% of your invested money, so that sector drove most of the loss.`,
+    );
+  }
+  parts.push("Remember this is scripted game data, not real market data.");
+  return parts.join(" ");
 }
 
 const DIVERSIFICATION =

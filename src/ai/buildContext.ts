@@ -1,5 +1,6 @@
 import { useGameStore } from "../store/useGameStore";
 import type { ScenarioResult } from "../types";
+import { explainScenario, type ScenarioFacts } from "./explainScenario";
 
 /** Compact, prompt-sized snapshot of the player's simulated portfolio. */
 export interface GuidePayload {
@@ -23,6 +24,8 @@ export interface GuidePayload {
     changePct: number;
     perHolding: { symbol: string; before: number; after: number; changePct: number }[];
   } | null;
+  /** Precomputed, authoritative facts. Sent to /api/chat in place of raw event data. */
+  facts: ScenarioFacts;
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
@@ -41,16 +44,19 @@ export function buildContext(): GuidePayload {
   const priceBySymbol = new Map((stocks ?? []).map((stock) => [stock.symbol, stock]));
 
   const holdings = (portfolio?.holdings ?? []).map((holding) => {
-    const stock = priceBySymbol.get(holding.symbol);
+    // Holdings carry companyId + optional UI aliases (symbol/avgPrice).
+    const symbol = holding.symbol || holding.companyId;
+    const avgPrice = holding.avgPrice ?? holding.avgCost ?? 0;
+    const stock = priceBySymbol.get(symbol);
     // Without a live quote, fall back to the average purchase price.
     const price = typeof stock?.price === "number" ? stock.price : null;
     return {
-      symbol: holding.symbol,
+      symbol,
       qty: holding.qty,
-      avgPrice: holding.avgPrice,
+      avgPrice,
       sector: stock?.sector ?? null,
       price,
-      value: round((price ?? holding.avgPrice) * holding.qty),
+      value: round((price ?? avgPrice) * holding.qty),
     };
   });
 
@@ -59,6 +65,7 @@ export function buildContext(): GuidePayload {
   return {
     portfolio: { cash: round(cash), totalValue: round(cash + holdingsValue), holdings },
     lastEvent: summarizeEvent(lastScenarioResult),
+    facts: explainScenario(portfolio, stocks, lastScenarioResult),
   };
 }
 

@@ -37,6 +37,7 @@ let lastXP = 0;
 let lastMissions: Record<string, boolean> = {};
 
 function snapshotMissions(missions: Mission[]): Record<string, boolean> {
+  // Mission.completed is optional in the shared types (Person B owns it).
   return Object.fromEntries(missions.map((mission) => [mission.id, Boolean(mission.completed)]));
 }
 
@@ -128,10 +129,9 @@ function startSyncing(): void {
 
     // Mission completion is pushed right away; the progress map keeps it idempotent.
     for (const mission of next.missions) {
-      const isCompleted = Boolean(mission.completed);
-      if (lastMissions[mission.id] !== isCompleted) {
-        lastMissions[mission.id] = isCompleted;
-        void saveMissionProgress(mission.id, { completed: isCompleted });
+      if (lastMissions[mission.id] !== Boolean(mission.completed)) {
+        lastMissions[mission.id] = Boolean(mission.completed);
+        void saveMissionProgress(mission.id, { completed: Boolean(mission.completed) });
       }
     }
   });

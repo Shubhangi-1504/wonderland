@@ -12,3 +12,30 @@ Use these; never import Supabase directly in feature code.
 8. Auto-sync is already wired — portfolio (1.5s debounce), XP, and mission completion.
 9. First signup after guest play uploads that device's progress once.
 10. `openAuthModal()` from `src/auth/authModalStore.ts` opens the login modal anywhere.
+
+## Analytics — `track(name, props?)`
+
+Fire-and-forget, never throws, no-ops when Supabase is not configured. Run `supabase/analytics.sql`
+once; rows go to `public.events` (insert-only from clients, no select policy). An `anon_id` is kept
+in `localStorage` to group guest events.
+
+Already tracked:
+
+| Event | Props |
+| --- | --- |
+| `chat_opened` | `{ source }` |
+| `chat_message_sent` | `{ length }` |
+| `chip_used` | `{ chip }` |
+| `quiz_started` | `{ source }` |
+| `quiz_completed` | `{ score, total }` |
+| `scenario_summary_viewed` | `{ scenarioId }` |
+| `fallback_shown` | `{ reason }` |
+
+Teammates: add yours the same way (no new tables, no awaits).
+
+```ts
+track("entered_world");
+track("mission_completed", { missionId: id });
+track("trade_executed", { side, symbol, qty });
+track("scenario_run", { scenarioId, changePct });
+```
