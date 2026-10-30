@@ -1,5 +1,6 @@
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { Suspense } from "react";
+import { ChatLauncher } from "./ai/ChatLauncher";
 import { AuthModal } from "./auth/AuthModal";
 import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
