@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Mesh, SphereGeometry, MeshBasicMaterial, AdditiveBlending } from 'three';
 import {
-  AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
@@ -11,6 +11,7 @@ import {
   ShaderMaterial,
 } from 'three';
 import { softGlowTexture } from '../materials';
+import { useSceneStore } from '../sceneStore';
 
 /**
  * Rising cyan motes in additive blending + a soft starfield.
@@ -138,4 +139,42 @@ export function Starfield({ count = 500 }: { count: number }) {
   );
 
   return <primitive object={built.pts} />;
+}
+
+/** Small cluster of red warning lights that pulse with crashLevel. */
+export function WarningLights() {
+  const tickRef = useRef(0);
+  const crashLevel = useSceneStore((s) => s.crashLevel);
+  const glow = useRef<Mesh>(null);
+
+  // one single additive point-light per screen-space flash
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    tickRef.current += crashLevel * 0.012;
+    const freq = 0.5 + 0.5 * Math.sin(t * 2.7 + tickRef.current * 0.7);
+    const brightness = crashLevel * (0.5 + 0.5 * freq);
+    if (glow.current) {
+      // pulse both position flicker and intensity together
+      glow.current.position.y = 2 + crashLevel * 0.4 * Math.sin(t * 3.3);
+      glow.current.position.x = 6 + crashLevel * 0.3 * Math.sin(t * 4.1);
+      (glow.current.material as MeshBasicMaterial).opacity =
+        0.04 + brightness * 0.36;
+    }
+  });
+
+  return (
+    <>
+      <mesh
+        ref={glow}
+        geometry={new SphereGeometry(1.6, 8, 8)}
+        material={new MeshBasicMaterial({
+          color: '#ff3b3b',
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          blending: AdditiveBlending,
+        })}
+      />
+    </>
+  );
 }
