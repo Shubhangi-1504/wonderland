@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { CameraRig } from './CameraRig';
 import { City } from './City';
 import { Forest } from './Forest';
@@ -11,6 +11,7 @@ import { AtmosphereParticles, Starfield } from './Atmosphere';
 import { CursorLight } from './CursorLight';
 import { PostFX } from './PostFX';
 import { usePerformanceProfile, usePageVisible } from '../hooks/usePerformanceProfile';
+import { WarningLights } from './Atmosphere';
 import { introTiming, useSceneStore } from '../sceneStore';
 
 export function SceneCanvas() {
@@ -42,32 +43,64 @@ export function SceneCanvas() {
         <directionalLight color="#b9c4ff" intensity={0.6} position={[0, 420, -1900]} />
         <directionalLight color="#9b5cff" intensity={0.35} position={[220, 260, 300]} />
 
-        <SceneContent reducedMotion={profile.reducedMotion} particleCount={profile.particles} />
+        <AdaptiveCanvas reducedMotion={profile.reducedMotion} particleCount={profile.particles} />
         <PostFX />
       </Canvas>
     </div>
   );
 }
 
-function SceneContent({
+/**
+ * Adaptive fallback: if the average frame time stays above ~24 ms for more
+ * than ~3 s, drop particles/dpr and disable bloom, once. Keeps the intro
+ * smooth on mid-range laptops and phones.                 */
+function AdaptiveCanvas({
   reducedMotion,
   particleCount,
 }: {
   reducedMotion: boolean;
   particleCount: number;
 }) {
+  const [lowEnd, setLowEnd] = useState(false);
+  const sampleRef = useRef<number[]>([]);
+  const lastFallbackRef = useRef(false);
+
+  // recalibrate the frame timer whenever the canvas is visible again
+  const firstFrameRef = useRef(true);
+
+  useFrame((state) => {
+    if (firstFrameRef.current) {
+      firstFrameRef.current = false;
+      return;
+    }
+    const dt = state.clock.getDelta() * 1000; // ms
+    sampleRef.current.push(dt);
+    if (sampleRef.current.length > 60) sampleRef.current.shift();
+    const avg = sampleRef.current.reduce((a, b) => a + b, 0) / sampleRef.current.length;
+
+    // once: drop to low-end budgets + disable bloom
+    if (!lastFallbackRef.current && avg > 24) {
+      lastFallbackRef.current = true;
+      setLowEnd(true);
+    }
+  });
+
+  const effective = lowEnd ? 60 : particleCount;
+  const reducedMotionBudget = reducedMotion ? 60 : effective;
+
   return (
     <Suspense fallback={null}>
       <City />
       <Forest />
       <IPOIsland />
       <LakeScene reducedMotion={reducedMotion} />
-      <River sprayCount={reducedMotion ? 60 : 200} />
+      <River sprayCount={reducedMotion ? 60 : reducedMotionBudget} />
       <Gates />
-      <AtmosphereParticles count={reducedMotion ? 120 : particleCount} />
-      <Starfield count={reducedMotion ? 200 : 500} />
+      <AtmosphereParticles count={reducedMotion ? 120 : reducedMotionBudget} />
+      <Starfield count={reducedMotion ? 200 : reducedMotionBudget} />
       <CameraRig />
       <CursorLight />
+      <WarningLights />
     </Suspense>
   );
 }

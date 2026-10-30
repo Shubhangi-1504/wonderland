@@ -14,6 +14,8 @@ interface SceneState {
   setGamePhase: (phase: GamePhase) => void;
   setProgress: (p: number) => void;
   setCrash: (level: number) => void;
+  /** Clean reset used by the exit-to-world + ?debug Replay. */
+  reset: () => void;
 }
 
 export const useSceneStore = create<SceneState>((set) => ({
@@ -23,6 +25,10 @@ export const useSceneStore = create<SceneState>((set) => ({
   setGamePhase: (gamePhase) => set({ gamePhase }),
   setProgress: (progress) => set({ progress }),
   setCrash: (level) => set({ crashLevel: Math.min(1, Math.max(0, level)) }),
+  reset: () => {
+    set({ gamePhase: 'loading', progress: 0, crashLevel: 0 });
+    applyCrashLook(0);
+  },
 }));
 
 /* Live scroll values — written/read inside the frame loop, never React state. */
@@ -64,3 +70,19 @@ export const uniforms = {
   city: { uTime: { value: 0 }, uReveal: { value: 0 }, uCrash: { value: 0 } },
   river: { uTime: { value: 0 }, uFlow: { value: 1 }, uBurst: { value: 0 }, uCrash: { value: 0 } },
 };
+
+/* ------------------------------------------------------------------ */
+/* Crash visual — one typed helper, single write-point, smooth easing. */
+/* Called by setCrash() and by the ?debug slider.                      */
+/* ------------------------------------------------------------------ */
+export function applyCrashLook(level: number): void {
+  const c = Math.min(1, Math.max(0, level));
+  uniforms.city.uCrash.value = c;
+  uniforms.river.uCrash.value = c;
+}
+
+/* Clean reset — no leaked listeners, no GPU holdover between intro/world. */
+export function resetSceneState() {
+  useSceneStore.getState().reset();
+  applyCrashLook(0);
+}

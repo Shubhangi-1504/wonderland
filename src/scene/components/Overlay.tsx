@@ -3,6 +3,13 @@ import gsap from 'gsap';
 import { startEnterWorld, useSceneStore } from '../sceneStore';
 import { scrollToScene } from './ScrollStage';
 
+/** @see src/scene/sceneStore.ts — used by ?debug Replay. */
+declare global {
+  interface Window {
+    __mvReplay?: () => void;
+  }
+}
+
 /**
  * HTML story layer: scene copy rises out of masks on first arrival and
  * resets when you leave, so every visit replays the reveal.
@@ -48,11 +55,27 @@ const SCENES = [
   },
 ];
 
-export function Overlay() {
+export function Overlay({ isDebug, toggleDebug }: {
+  isDebug: boolean;
+  toggleDebug: () => void;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const hint = useRef<HTMLDivElement>(null);
   const flash = useRef<HTMLDivElement>(null);
   const enterHandled = useRef(false);
+
+  /* ?debug gate: must be on the URL, or the Replay button has no handler */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('debug')) toggleDebug();
+  }, [toggleDebug]);
+
+  /* Replay the intro without touching gamePhase/crashLevel (leaves them
+   * untouched so the user can jump straight back into the dive). */
+  const handleReplay = () => {
+    if (!isDebug) return;
+    if (window.__mvReplay) window.__mvReplay();
+  };
 
   /* --- per-scene mask reveals driven by the live scroll value --- */
   useEffect(() => {
@@ -169,7 +192,12 @@ export function Overlay() {
   }, []);
 
   return (
-    <div id="mv-overlay" className="pointer-events-none fixed inset-0 z-10">
+    <div
+      ref={root}
+      id="mv-overlay"
+      className="pointer-events-none fixed inset-0 z-10"
+      data-debug={isDebug ? '' : undefined}
+    >
       {/* top nav */}
       <nav className="fixed inset-x-0 top-0 z-20 flex justify-center gap-1.5 px-4 py-4 sm:gap-3">
         {SCENES.map((s, i) => (
@@ -194,6 +222,44 @@ export function Overlay() {
       >
         {crashLevel > 0 ? 'RESTORE MARKETS' : 'SIMULATE MARKET SHOCK'}
       </button>
+
+      {/* DEBUG PANEL (?debug): slider + replay — never visible in normal use */}
+      {isDebug && (
+        <>
+          <div id="mv-debug-toggles">
+            <button
+              type="button"
+              id="mv-debug-btn"
+              onClick={toggleDebug}
+              aria-label="Close debug panel"
+            >
+              ✕
+            </button>
+          </div>
+          <div id="mv-debug-panel">
+            <div id="mv-debug-label">Market shock</div>
+            <input
+              id="mv-debug-slider"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={crashLevel}
+              onChange={(e) => setCrash(Number(e.target.value))}
+              className="mt-1"
+            />
+            <div id="mv-debug-value">{Math.round(crashLevel * 100)}%</div>
+            <button
+              type="button"
+              id="mv-debug-replay"
+              onClick={handleReplay}
+              className="mv-focus mt-1"
+            >
+              Replay intro
+            </button>
+          </div>
+        </>
+      )}
 
       {/* scene panel */}
       {SCENES.map((s, i) => (

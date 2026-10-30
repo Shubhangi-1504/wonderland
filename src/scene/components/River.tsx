@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useSceneStore } from '../sceneStore';
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -112,13 +113,17 @@ export function River({ sprayCount = 200 }: { sprayCount?: number }) {
   }, [built]);
 
   const tmp = useMemo(() => new Vector3(), []);
+  const uniformDriftRef = useRef(1);
 
   useFrame((state, dt) => {
     const time = state.clock.elapsedTime;
     built.material.uniforms.uTime.value = time;
     // river slows while standing still in a scene so the world feels alive but calm
     const drift = 0.35 + Math.min(Math.abs(scrollRuntime.target - scrollRuntime.current) * 2.2, 1) * 0.65;
-    uniforms.river.uFlow.value = drift;
+    uniformDriftRef.current = drift;
+    // crash: river slows and the streaks flicker toward red
+    const crash = useSceneStore.getState().crashLevel;
+    uniforms.river.uFlow.value = drift * (1 - crash * 0.55);
     void dt;
     for (let i = 0; i < built.sprayParams.length; i++) {
       const s = built.sprayParams[i];
