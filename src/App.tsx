@@ -1,4 +1,5 @@
 import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { ChatLauncher } from "./ai/ChatLauncher";
 import { AuthModal } from "./auth/AuthModal";
 import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
@@ -39,6 +40,8 @@ export default function App() {
         <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
       <AuthModal />
+      {/* Global AI guide: mounted once so it survives route changes. */}
+      <ChatLauncher />
     </div>
   );
 }
