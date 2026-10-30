@@ -37,7 +37,7 @@ let lastXP = 0;
 let lastMissions: Record<string, boolean> = {};
 
 function snapshotMissions(missions: Mission[]): Record<string, boolean> {
-  return Object.fromEntries(missions.map((mission) => [mission.id, mission.completed]));
+  return Object.fromEntries(missions.map((mission) => [mission.id, Boolean(mission.completed)]));
 }
 
 function readGuestFlag(): boolean {
@@ -128,9 +128,10 @@ function startSyncing(): void {
 
     // Mission completion is pushed right away; the progress map keeps it idempotent.
     for (const mission of next.missions) {
-      if (lastMissions[mission.id] !== mission.completed) {
-        lastMissions[mission.id] = mission.completed;
-        void saveMissionProgress(mission.id, { completed: mission.completed });
+      const isCompleted = Boolean(mission.completed);
+      if (lastMissions[mission.id] !== isCompleted) {
+        lastMissions[mission.id] = isCompleted;
+        void saveMissionProgress(mission.id, { completed: isCompleted });
       }
     }
   });
