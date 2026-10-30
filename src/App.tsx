@@ -4,6 +4,7 @@ import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
+import { resetIntro } from "./scene/sceneStore";
 
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
@@ -17,7 +18,11 @@ function NavBar() {
   return (
     <nav className="flex items-center gap-2 border-b border-white/10 bg-midnight/90 backdrop-blur-md px-4 py-2 sticky top-0 z-50">
       <span className="mr-4 font-bold tracking-widest text-gold">MONEYVERSE</span>
-      <Link className={location.pathname === "/" ? activeLink : link} to="/">
+      <Link
+        className={location.pathname === "/" ? activeLink : link}
+        to="/"
+        onClick={() => resetIntro()}
+      >
         Intro
       </Link>
       <Link className={location.pathname === "/world" ? activeLink : link} to="/world">

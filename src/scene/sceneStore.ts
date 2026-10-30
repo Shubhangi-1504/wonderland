@@ -40,6 +40,22 @@ export function startEnterWorld() {
   }
 }
 
+/** Resets intro state and camera position when navigating back to the intro */
+export function resetIntro() {
+  enterState.active = false;
+  enterState.start = 0;
+  scrollRuntime.target = 0;
+  scrollRuntime.current = 0;
+  introTiming.start = performance.now() / 1000;
+  uniforms.river.uBurst.value = 0;
+  uniforms.city.uReveal.value = 1;
+  useSceneStore.getState().setGamePhase('intro');
+  useSceneStore.getState().setProgress(0);
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }
+}
+
 /* Intro reveal timing (set once the canvas is up; eased over ~2.6 s). */
 export const introTiming = { start: 0 };
 
