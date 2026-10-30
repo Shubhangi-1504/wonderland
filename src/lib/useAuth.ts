@@ -1,38 +1,115 @@
 import { useEffect, useState } from "react";
-import type { AuthState } from "../types";
 import { supabase } from "./supabase";
 
-/** Signed-out users are treated as guests so the whole app works without an account. */
-export function useAuth(): AuthState {
-  const [state, setState] = useState<AuthState>({ user: null, isGuest: true });
+/** localStorage flag set by "Continue as guest". Used once, to migrate guest progress on signup. */
+export const GUEST_FLAG = "moneyverse_guest";
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const user = data.session?.user;
-      setState(
-        user
-          ? { user: { id: user.id, email: user.email }, isGuest: false }
-          : { user: null, isGuest: true },
-      );
-    });
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user;
-      setState(
-        user
-          ? { user: { id: user.id, email: user.email }, isGuest: false }
-          : { user: null, isGuest: true },
-      );
-    });
-
-    return () => data.subscription.unsubscribe();
-  }, []);
-
-  return state;
+export interface AuthUser {
+  id: string;
+  email?: string;
+  /** display_name from signUp metadata (also copied into public.profiles by the DB trigger). */
+  displayName?: string;
 }
 
-/** Convenience helper for the persistence stubs. */
+export interface AuthResult {
+  error: string | null;
+  /** Non-error info, e.g. "confirm your email before signing in". */
+  notice?: string;
+}
+
+export interface UseAuthResult {
+  user: AuthUser | null;
+  /** No session => guest. Guests never touch Supabase tables. */
+  isGuest: boolean;
+  /** True until the initial session check resolves. */
+  loading: boolean;
+  signUp: (email: string, password: string, displayName?: string) => Promise<AuthResult>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  signOut: () => Promise<void>;
+  continueAsGuest: () => void;
+}
+
+function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null): AuthUser | null {
+  if (!user) return null;
+  const name = user.user_metadata?.display_name;
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: typeof name === "string" && name.trim() ? name : undefined,
+  };
+}
+
+/** Current session user id, or null for guests. Used by persistence + sync. */
 export async function getCurrentUserId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   return data.session?.user.id ?? null;
+}
+
+/**
+ * Auth + guest mode. Signing out never clears game state; guests keep localStorage progress.
+ */
+export function useAuth(): UseAuthResult {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setUser(toAuthUser(data.session?.user ?? null));
+      setLoading(false);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setUser(toAuthUser(session?.user ?? null));
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function signUp(email: string, password: string, displayName?: string): Promise<AuthResult> {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: displayName?.trim() ? { display_name: displayName.trim() } : undefined },
+    });
+    if (error) return { error: error.message };
+    // Supabase may require email confirmation, in which case there is no session yet.
+    if (!data.session) return { error: null, notice: "Check your email to confirm, then sign in." };
+    return { error: null };
+  }
+
+  async function signIn(email: string, password: string): Promise<AuthResult> {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error ? error.message : null };
+  }
+
+  async function signOut(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.warn("[moneyverse] signOut failed", error.message);
+  }
+
+  function continueAsGuest(): void {
+    try {
+      localStorage.setItem(GUEST_FLAG, "true");
+    } catch {
+      // Private mode / storage disabled: guest mode still works, just no local persistence.
+    }
+  }
+
+  return {
+    user,
+    isGuest: !user,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    continueAsGuest,
+  };
 }
