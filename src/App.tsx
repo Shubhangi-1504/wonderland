@@ -47,6 +47,8 @@ export default function App() {
         <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
       <AuthModal />
+      {/* Global AI guide: mounted once so it survives route changes. */}
+      <ChatLauncher />
     </div>
   );
 }
