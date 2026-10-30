@@ -1,7 +1,12 @@
 # src/ai — MONEYVERSE Guide
 
-Open from anywhere: `openChat("Explain what just happened to my portfolio.")`. `<ChatLauncher />` is mounted in `App.tsx`.
-Each request sends cash, holdings (qty, avgPrice, sector, price, value), total value, and the last event (title, shock, before/after, per-holding change).
-Rules live in `api/_prompt.ts` (`SYSTEM_PROMPT`); glossary in `glossary.md` / `glossary.ts`; offline answers in `fallbacks.ts`.
-Env: `ANTHROPIC_API_KEY` (required, server-only), `LLM_MODEL` (optional, default `claude-haiku-5-5`).
-Run `vercel dev` alongside `npm run dev` so `/api/chat` exists locally.
+- Open from anywhere: `openChat("...")`; quiz: `openQuiz()`. `<ChatLauncher />` is in `App.tsx`.
+- Facts pipeline: `explainScenario(portfolio, stocks, lastScenarioResult)` → `ScenarioFacts` (pure, no LLM).
+  `buildContext()` attaches it; `askGuide` sends `{ messages, portfolio, facts }`; prompt treats facts as authoritative.
+- Summary card: mount `<ScenarioSummaryCard />` on the crash simulator page (non-LLM numbers + "Ask the Guide").
+- Quiz: `src/ai/quiz/` — 12-question bank, 5 per session, 10 XP per correct answer, bank fallback offline.
+- Simulated labels: mount `<SimulatedBadge />` / `<DataSourceFootnote />` from `src/components/shared`
+  (portfolio header, trade panel, company panel, crash overlay — see that folder's README).
+- Analytics: `track()` from `src/lib/track.ts`; event names listed in `src/lib/README.md`.
+- Env: `ANTHROPIC_API_KEY` (server-only, required), `LLM_MODEL` (optional), `VITE_SUPABASE_URL` +
+  `VITE_SUPABASE_ANON_KEY` (analytics; both optional). Run `vercel dev` with `npm run dev` for `/api`.
