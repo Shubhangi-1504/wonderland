@@ -1,10 +1,14 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
 
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
+  const location = useLocation();
+  // Hide top navigation on the cinematic intro route to preserve full-screen immersion
+  if (location.pathname === "/") return null;
+
   const link = "rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-purple/20 hover:text-white";
   return (
     <nav className="flex items-center gap-2 border-b border-white/10 bg-midnight px-4 py-2">

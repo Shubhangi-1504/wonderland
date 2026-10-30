@@ -1,8 +1,22 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import IntroScene from './IntroScene';
+import { useSceneStore } from './sceneStore';
+import { useGameStore } from '../store/useGameStore';
+
 export function IntroPage() {
-  return (
-    <main className="flex min-h-[70vh] flex-col items-center justify-center gap-4">
-      <h1 className="text-4xl font-bold text-gold">MONEYVERSE</h1>
-      <p className="text-lg text-slate-300">Intro scene - Person A</p>
-    </main>
-  );
+  const navigate = useNavigate();
+  const gamePhase = useSceneStore((s) => s.gamePhase);
+  const setHasEntered = useGameStore((s) => s.setHasEntered);
+
+  useEffect(() => {
+    if (gamePhase === 'world') {
+      setHasEntered(true);
+      navigate('/world');
+    }
+  }, [gamePhase, navigate, setHasEntered]);
+
+  return <IntroScene />;
 }
+
+export default IntroPage;

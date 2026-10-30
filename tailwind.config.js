@@ -10,6 +10,11 @@ export default {
         cyan: "#22d3ee",
         gold: "#f5b942",
       },
+      fontFamily: {
+        display: ['"Space Grotesk"', "Inter", "system-ui", "sans-serif"],
+        oswald: ["Oswald", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+      },
     },
   },
   plugins: [],
