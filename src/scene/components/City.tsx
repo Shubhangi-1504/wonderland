@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';import {
+import { useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';import {
   BoxGeometry,
   CanvasTexture,
   CylinderGeometry,
@@ -22,11 +23,12 @@ import {
   type TowerSpec,
 } from '../worldLayout';
 import { makeBuildingMaterial, makeTickerMaterial, textLabelTexture } from '../materials';
+import { useSceneStore } from '../sceneStore';
 import { uniforms } from '../sceneStore';
 
 const dummy = new Object3D();
 
-/** Instanced emissive-window towers; reveal + crash live in uniforms.city. */
+/** Instanced emissive-window towers; crash tint/flicker live in uniforms.city. */
 function buildTowers(specs: TowerSpec[], uniformsCity = uniforms.city) {
   const geometry = new BoxGeometry(1, 1, 1);
   const seeds = new Float32Array(specs.length);
@@ -50,7 +52,25 @@ function buildTowers(specs: TowerSpec[], uniformsCity = uniforms.city) {
   });
   mesh.instanceMatrix.needsUpdate = true;
   mesh.frustumCulled = false;
-  return mesh;
+
+  /* a few tiny red warning lights on each tower */
+  const warnGeo = new BoxGeometry(1, 1, 1);
+  const warnMat = new MeshStandardMaterial({
+    color: '#161233',
+    emissive: '#ff3b3b',
+    emissiveIntensity: 0.1,
+  });
+  const warningLights = new InstancedMesh(warnGeo, warnMat, specs.length);
+  specs.forEach((t, i) => {
+    dummy.position.set(t.x, t.h / 2 + 24, t.z);
+    dummy.rotation.set(0.2 + i * 0.3, 0, 0.1);
+    dummy.scale.set(1.4, 1.6, 0.6);
+    dummy.updateMatrix();
+    warningLights.setMatrixAt(i, dummy.matrix);
+  });
+  warningLights.instanceMatrix.needsUpdate = true;
+  warningLights.frustumCulled = false;
+  return { mesh, warningLights };
 }
 
 /**
@@ -59,8 +79,8 @@ function buildTowers(specs: TowerSpec[], uniformsCity = uniforms.city) {
  */
 export function City() {
   const built = useMemo(() => {
-    const hero = buildTowers(generateHeroCity());
-    const market = buildTowers(generateMarketCity());
+    const { mesh: hero } = buildTowers(generateHeroCity());
+    const { mesh: market, warningLights: marketWarnings } = buildTowers(generateMarketCity());
 
     /* central gold tower of the hero city */
     const goldTowerGeometry = new CylinderGeometry(7, 11, 170, 8, 1, false);
@@ -162,6 +182,7 @@ export function City() {
     return {
       hero,
       market,
+      marketWarnings,
       goldTower,
       pool,
       mist,
@@ -192,8 +213,30 @@ export function City() {
       built.greenTickerMesh.material.dispose();
       built.redTickerMesh.geometry.dispose();
       built.redTickerMesh.material.dispose();
+      built.marketWarnings.geometry.dispose();
+      built.marketWarnings.material.dispose();
     };
   }, [built]);
+
+  /* warning-light flicker driven by crashLevel (no per-frame allocation) */
+  const crashLevel = useSceneStore((s) => s.crashLevel);
+  const tickRef = useRef(0);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const flicker = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t * 2.4 + tickRef.current * 0.6));
+    (built.goldTower.material as MeshStandardMaterial).emissiveIntensity =
+      0.85 + flicker * crashLevel * 1.2;
+    (built.greenTickerMesh.material as MeshStandardMaterial).emissiveIntensity =
+      crashLevel > 0.3
+        ? 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t * 3.1 + tickRef.current * 0.8))
+        : 0.4;
+    (built.redTickerMesh.material as MeshStandardMaterial).emissiveIntensity =
+      crashLevel > 0.3
+        ? 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t * 4.3 + tickRef.current * 1.1))
+        : 0.4;
+    tickRef.current += crashLevel * 0.01;
+  });
 
   return (
     <>

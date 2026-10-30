@@ -14,7 +14,6 @@ import type { uniforms as UniformRegistry } from './sceneStore';
 /* light up (tower-by-tower reveal) via a per-instance aSeed < uReveal */
 /* test; crash tints windows crimson and cuts some lights.             */
 /* ------------------------------------------------------------------ */
-
 export type CityUniforms = (typeof UniformRegistry)['city'];
 
 export function makeBuildingMaterial(u: CityUniforms): MeshStandardMaterial {
@@ -94,7 +93,6 @@ export function makeBuildingMaterial(u: CityUniforms): MeshStandardMaterial {
             vec2 inset = vec2(0.18, 0.3);
             float win = step(inset.x, fr.x) * step(fr.x, 1.0 - inset.x)
                       * step(inset.y, fr.y) * step(fr.y, 1.0 - inset.y);
-            // tower-by-tower reveal: an entire tower lights up when uReveal passes its seed
             float towerOn = step(vSeed, uReveal);
             float lit = step(h1, 0.6);
             float flick = 0.7 + 0.3 * sin(uTime * (0.5 + h2) + h1 * 40.0);
@@ -114,7 +112,6 @@ export function makeBuildingMaterial(u: CityUniforms): MeshStandardMaterial {
 /* ------------------------------------------------------------------ */
 /* Ticker bars: green/red emissive strips with per-instance blink.     */
 /* ------------------------------------------------------------------ */
-
 export function makeTickerMaterial(
   colorHex: string,
   u: CityUniforms,
@@ -131,8 +128,14 @@ export function makeTickerMaterial(
     shader.uniforms.uReveal = u.uReveal;
     shader.uniforms.uCrash = u.uCrash;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\nattribute float aSeed;\nvarying float vSeed;`)
-      .replace('#include <begin_vertex>', `#include <begin_vertex>\nvSeed = aSeed;`);
+      .replace(
+        '#include <common>',
+        `#include <common>\nattribute float aSeed;\nvarying float vSeed;`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>\nvSeed = aSeed;`,
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
@@ -154,9 +157,42 @@ export function makeTickerMaterial(
 }
 
 /* ------------------------------------------------------------------ */
+/* Tiny red warning lights on each tower, driven by crashLevel.        */
+/* Additive blend, so they flash without extra draw cost.              */
+/* ------------------------------------------------------------------ */
+export function makeWarningLights(u: CityUniforms): MeshStandardMaterial {
+  const mat = new MeshStandardMaterial({
+    color: '#161233',
+    emissive: '#ff3b3b',
+    emissiveIntensity: 0.1,
+  });
+  mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
+    shader.uniforms.uTime = u.uTime;
+    shader.uniforms.uCrash = u.uCrash;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aSeed;\nvarying float vSeed;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nuniform float uTime;\nuniform float uCrash;\nvarying float vSeed;',
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `        {
+          float flicker = 0.6 + 0.4 * sin(uTime * (0.8 + vSeed * 3.0) + vSeed * 11.0);
+          float flash = uCrash * (0.45 + 0.55 * sin(uTime * 3.7 + vSeed * 5.0));
+          totalEmissiveRadiance *= (1.0 - uCrash) + uCrash * (0.5 + 0.5 * flicker);
+          totalEmissiveRadiance = mix(totalEmissiveRadiance, emissive * (0.9 + flash), uCrash);
+        }`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'moneyverse-warning-lights';
+  return mat;
+}
+
+/* ------------------------------------------------------------------ */
 /* River ribbon shader: cyan streaks scrolling along the length.       */
 /* ------------------------------------------------------------------ */
-
 export function makeRiverMaterial(r: (typeof UniformRegistry)['river']): ShaderMaterial {
   return new ShaderMaterial({
     uniforms: {
@@ -165,14 +201,12 @@ export function makeRiverMaterial(r: (typeof UniformRegistry)['river']): ShaderM
       uBurst: r.uBurst,
       uCrash: r.uCrash,
     },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
+    vertexShader: `      varying vec2 vUv;
       void main() {
         vUv = uv;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
+    fragmentShader: `      uniform float uTime;
       uniform float uFlow;
       uniform float uBurst;
       uniform float uCrash;
@@ -212,7 +246,6 @@ export function makeRiverMaterial(r: (typeof UniformRegistry)['river']): ShaderM
 /* ------------------------------------------------------------------ */
 /* Canvas textures (all procedural, no external assets)                */
 /* ------------------------------------------------------------------ */
-
 export function textLabelTexture(text: string, color = '#ffc65c', sub = ''): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = 512;
