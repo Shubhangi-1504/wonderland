@@ -8,20 +8,20 @@ import { PortfolioPage } from "./portfolio/PortfolioPage";
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
   const location = useLocation();
-  // Hide top navigation on the cinematic intro route to preserve full-screen immersion
-  if (location.pathname === "/") return null;
 
-  const link = "rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-purple/20 hover:text-white";
+  const link = "rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-purple/20 hover:text-white transition-colors";
+  const activeLink = "rounded-md px-3 py-1.5 text-sm font-semibold text-cyan bg-purple/30 border border-cyan/40 transition-colors";
+
   return (
-    <nav className="flex items-center gap-2 border-b border-white/10 bg-midnight px-4 py-2">
+    <nav className="flex items-center gap-2 border-b border-white/10 bg-midnight/90 backdrop-blur-md px-4 py-2 sticky top-0 z-50">
       <span className="mr-4 font-bold tracking-widest text-gold">MONEYVERSE</span>
-      <Link className={link} to="/">
+      <Link className={location.pathname === "/" ? activeLink : link} to="/">
         Intro
       </Link>
-      <Link className={link} to="/world">
-        World
+      <Link className={location.pathname === "/world" ? activeLink : link} to="/world">
+        🏙️ World (Stock Market City)
       </Link>
-      <Link className={link} to="/portfolio">
+      <Link className={location.pathname === "/portfolio" ? activeLink : link} to="/portfolio">
         Portfolio
       </Link>
       <UserBadge />
