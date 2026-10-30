@@ -1,0 +1,16 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        navy: "#0b1030",
+        midnight: "#070a1f",
+        purple: "#6b3fd4",
+        cyan: "#22d3ee",
+        gold: "#f5b942",
+      },
+    },
+  },
+  plugins: [],
+};
