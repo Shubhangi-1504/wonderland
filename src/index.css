@@ -17,4 +17,40 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+.font-display {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+}
+
+/* loading screen breathing line */
+.loading-bar {
+  animation: loadingSlide 1.6s ease-in-out infinite;
+}
+@keyframes loadingSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+/* Enter button idle pulse */
+.enter-btn {
+  animation: enterPulse 2.6s ease-in-out infinite;
+}
+@keyframes enterPulse {
+  0%, 100% { box-shadow: 0 0 28px rgba(255, 213, 138, 0.35); }
+  50% { box-shadow: 0 0 55px rgba(120, 229, 255, 0.5); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar,
+  .enter-btn {
+    animation: none;
+  }
 }
