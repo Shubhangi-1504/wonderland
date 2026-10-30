@@ -1,4 +1,6 @@
 import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { AuthModal } from "./auth/AuthModal";
+import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
@@ -22,6 +24,7 @@ function NavBar() {
       <Link className={link} to="/portfolio">
         Portfolio
       </Link>
+      <UserBadge />
     </nav>
   );
 }
@@ -35,6 +38,7 @@ export default function App() {
         <Route path="/world" element={<WorldPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
+      <AuthModal />
     </div>
   );
 }
