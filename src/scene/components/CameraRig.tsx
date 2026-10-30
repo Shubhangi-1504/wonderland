@@ -83,6 +83,10 @@ export function CameraRig() {
     }
 
     /* 5. enter-the-world dash */
+    if (!enterState.active && (scrollRuntime.current >= 3.65 || scrollRuntime.target >= 3.7)) {
+      startEnterWorld();
+    }
+
     if (enterState.active) {
       const e = Math.min((performance.now() / 1000 - enterState.start) / 1.5, 1);
       const eased = e * e * (3 - 2 * e);

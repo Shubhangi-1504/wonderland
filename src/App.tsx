@@ -8,6 +8,8 @@ import { PortfolioPage } from "./portfolio/PortfolioPage";
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
   const location = useLocation();
+  // Hide top navigation on the cinematic intro route to preserve full-screen immersion
+  if (location.pathname === "/") return null;
 
   const link = "rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-purple/20 hover:text-white transition-colors";
   const activeLink = "rounded-md px-3 py-1.5 text-sm font-semibold text-cyan bg-purple/30 border border-cyan/40 transition-colors";

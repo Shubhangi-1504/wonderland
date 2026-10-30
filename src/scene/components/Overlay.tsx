@@ -146,25 +146,32 @@ export function Overlay() {
   const setCrash = useSceneStore((s) => s.setCrash);
   const gamePhase = useSceneStore((s) => s.gamePhase);
 
-  /* ENTER THE WORLD: dash + burst is handled by the rig; flash here, then the store flips */
-  const handleEnter = () => {
-    if (enterHandled.current) return;
-    enterHandled.current = true;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!reduced && flash.current) {
-      gsap.fromTo(
-        flash.current,
-        { opacity: 0 },
-        { opacity: 0.7, duration: 0.4, ease: 'power2.in', yoyo: true, repeat: 1 },
-      );
-    }
-    startEnterWorld();
-  };
+  /* Trigger flash when the dive reaches the portal and enterState activates */
+  useEffect(() => {
+    let raf = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      if (useSceneStore.getState().gamePhase === 'world') return;
+      if (enterState.active && !enterHandled.current) {
+        enterHandled.current = true;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduced && flash.current) {
+          gsap.fromTo(
+            flash.current,
+            { opacity: 0 },
+            { opacity: 0.7, duration: 0.4, ease: 'power2.in', yoyo: true, repeat: 1 },
+          );
+        }
+      }
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   return (
     <div id="mv-overlay" className="pointer-events-none fixed inset-0 z-10">
       {/* top nav */}
-      <nav className="fixed inset-x-0 top-12 z-20 flex justify-center items-center flex-wrap gap-1.5 px-4 py-2 sm:gap-3">
+      <nav className="fixed inset-x-0 top-0 z-20 flex justify-center gap-1.5 px-4 py-4 sm:gap-3">
         {SCENES.map((s, i) => (
           <button
             key={s.id}
@@ -179,18 +186,11 @@ export function Overlay() {
             {s.nav}
           </button>
         ))}
-        <button
-          type="button"
-          onClick={handleEnter}
-          className="mv-focus font-oswald pointer-events-auto rounded-full bg-gradient-to-r from-[#ffc65c] to-[#38e8ff] px-4 py-1.5 text-[9px] font-bold tracking-[0.25em] text-[#0a0820] shadow-[0_0_20px_rgba(56,232,255,0.5)] transition-transform hover:scale-105 sm:text-[11px]"
-        >
-          ENTER WORLD ↗
-        </button>
       </nav>
       <button
         type="button"
         onClick={() => setCrash(crashLevel > 0 ? 0 : 1)}
-        className="mv-focus font-oswald pointer-events-auto fixed right-4 top-24 z-20 rounded-full border border-[#ff526a]/40 px-3 py-1.5 text-[9px] tracking-[0.25em] text-[#ff526a]/90 hover:bg-[#ff526a]/10 sm:top-[72px] sm:text-[10px]"
+        className="mv-focus font-oswald pointer-events-auto fixed right-4 top-14 z-20 rounded-full border border-[#ff526a]/40 px-3 py-1.5 text-[9px] tracking-[0.25em] text-[#ff526a]/90 hover:bg-[#ff526a]/10 sm:top-[60px] sm:text-[10px]"
       >
         {crashLevel > 0 ? 'RESTORE MARKETS' : 'SIMULATE MARKET SHOCK'}
       </button>
@@ -235,37 +235,6 @@ export function Overlay() {
             >
               {s.tagline}
             </p>
-            {i === 0 && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleEnter}
-                  className="mv-focus mv-enter-btn font-oswald pointer-events-auto rounded-full bg-gradient-to-r from-[#ffc65c] to-[#38e8ff] px-8 py-3.5 text-xs font-bold tracking-[0.32em] text-[#0a0820] shadow-[0_0_35px_rgba(56,232,255,0.45)] transition-transform hover:scale-105"
-                >
-                  ENTER STOCK MARKET CITY
-                </button>
-              </div>
-            )}
-            {i === 1 && (
-              <div className="mt-7">
-                <button
-                  type="button"
-                  onClick={handleEnter}
-                  className="mv-focus mv-enter-btn font-oswald pointer-events-auto rounded-full bg-gradient-to-r from-[#ffc65c] to-[#38e8ff] px-8 py-3.5 text-xs font-bold tracking-[0.32em] text-[#0a0820] shadow-[0_0_35px_rgba(56,232,255,0.45)] transition-transform hover:scale-105"
-                >
-                  ENTER STOCK MARKET CITY →
-                </button>
-              </div>
-            )}
-            {i === 4 && (
-              <button
-                type="button"
-                onClick={handleEnter}
-                className="mv-focus mv-enter-btn font-oswald pointer-events-auto mt-9 rounded-full bg-gradient-to-r from-[#ffc65c] to-[#38e8ff] px-12 py-4 text-sm tracking-[0.38em] text-[#0a0820] shadow-[0_0_45px_rgba(255,198,92,0.4)] transition-transform hover:scale-105"
-              >
-                ENTER THE WORLD
-              </button>
-            )}
           </div>
         </section>
       ))}
