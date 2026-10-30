@@ -4,6 +4,8 @@ interface Props {
   children: ReactNode;
   /** Short label used in the fallback, e.g. "Chat". */
   label?: string;
+  /** If true, renders a full-screen recovery screen with a reload button. */
+  fullScreen?: boolean;
 }
 
 interface State {
@@ -31,7 +33,37 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
 
-    const label = this.props.label ?? "This panel";
+    const label = this.props.label ?? (this.props.fullScreen ? "MONEYVERSE" : "This panel");
+
+    if (this.props.fullScreen) {
+      return (
+        <div
+          role="alert"
+          className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-navy px-6 text-center text-white"
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10 text-2xl font-bold text-gold">
+            !
+          </div>
+          <h1 className="font-display text-2xl font-bold tracking-wide text-white sm:text-3xl">
+            Something went wrong
+          </h1>
+          <p className="max-w-md text-sm text-slate-300">
+            {label} hit an unexpected snag. Your simulated session is preserved. Reload to continue.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              this.reset();
+              if (typeof window !== "undefined") window.location.reload();
+            }}
+            className="mt-2 rounded-xl bg-gradient-to-r from-purple to-cyan px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple/20 transition-all hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+          >
+            Reload application
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div
         role="alert"

@@ -8,6 +8,7 @@ import {
 } from "../lib/persistence";
 import { supabase } from "../lib/supabase";
 import { getCurrentUserId, GUEST_FLAG } from "../lib/useAuth";
+import { isDemoMode } from "../lib/demoMode";
 import { useGameStore } from "./useGameStore";
 
 /**
@@ -188,6 +189,8 @@ async function onSignedIn(): Promise<void> {
  * Returns a cleanup function for tests / hot reload.
  */
 export function initSync(): () => void {
+  // In demo mode, zero table or auth calls are made to Supabase
+  if (isDemoMode()) return () => {};
   if (started) return () => {};
   started = true;
 

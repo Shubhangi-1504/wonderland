@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ChatLauncher } from "./ai/ChatLauncher";
 import { AuthModal } from "./auth/AuthModal";
 import { UserBadge } from "./auth/UserBadge";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
@@ -35,18 +36,20 @@ export default function App() {
   return (
     <div className="min-h-screen bg-navy text-white">
       <NavBar />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Suspense fallback={<div className="min-h-screen bg-navy text-white" />}>
-              <IntroPage />
-            </Suspense>
-          }
-        />
-        <Route path="/world" element={<WorldPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-      </Routes>
+      <ErrorBoundary label="MONEYVERSE" fullScreen>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Suspense fallback={<div className="min-h-screen bg-navy text-white" />}>
+                <IntroPage />
+              </Suspense>
+            }
+          />
+          <Route path="/world" element={<WorldPage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
+        </Routes>
+      </ErrorBoundary>
       <AuthModal />
       {/* Global AI guide: mounted once so it survives route changes. */}
       <ChatLauncher />
