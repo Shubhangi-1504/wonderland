@@ -235,37 +235,54 @@ export function WorldPage() {
       )}
 
       {/* Global Notifications for Level Ups, Badge Unlocks, and XP rewards */}
-      {(activeNotification as any)?.type === "badge" && (
-        <BadgeUnlockNotification
-          badge={(activeNotification as any).badge}
-          bonusXp={(activeNotification as any).bonusXp}
-          onDismiss={dismissNotification}
-        />
-      )}
+      {(() => {
+        const notif = activeNotification as unknown as {
+          type?: string;
+          badge?: unknown;
+          bonusXp?: number;
+          oldLevel?: number;
+          newLevel?: number;
+          newTitle?: string;
+          amount?: number;
+          source?: string;
+        } | null;
 
-      {(activeNotification as any)?.type === "levelup" && (
-        <LevelUpNotification
-          oldLevel={(activeNotification as any).oldLevel}
-          newLevel={(activeNotification as any).newLevel}
-          newTitle={(activeNotification as any).newTitle}
-          onDismiss={dismissNotification}
-        />
-      )}
+        return (
+          <>
+            {notif?.type === "badge" && (
+              <BadgeUnlockNotification
+                badge={notif.badge}
+                bonusXp={notif.bonusXp}
+                onDismiss={dismissNotification}
+              />
+            )}
 
-      {(activeNotification as any)?.type === "xp" && (
-        <XPRewardAnimation
-          amount={(activeNotification as any).amount}
-          source={(activeNotification as any).source}
-          onDismiss={dismissNotification}
-        />
-      )}
+            {notif?.type === "levelup" && (
+              <LevelUpNotification
+                oldLevel={notif.oldLevel}
+                newLevel={notif.newLevel}
+                newTitle={notif.newTitle}
+                onDismiss={dismissNotification}
+              />
+            )}
 
-      {/* Celebratory Particle / Confetti System */}
-      {(showConfetti ||
-        (activeNotification as any)?.type === "levelup" ||
-        (activeNotification as any)?.type === "badge") && (
-        <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
-      )}
+            {notif?.type === "xp" && (
+              <XPRewardAnimation
+                amount={notif.amount}
+                source={notif.source}
+                onDismiss={dismissNotification}
+              />
+            )}
+
+            {/* Celebratory Particle / Confetti System */}
+            {(showConfetti ||
+              notif?.type === "levelup" ||
+              notif?.type === "badge") && (
+              <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
+            )}
+          </>
+        );
+      })()}
     </main>
   );
 }
