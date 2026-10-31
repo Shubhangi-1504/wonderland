@@ -41,6 +41,7 @@ function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<s
 
 /** Current session user id, or null for guests. Used by persistence + sync. */
 export async function getCurrentUserId(): Promise<string | null> {
+  if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data.session?.user.id ?? null;
 }
@@ -54,6 +55,11 @@ export function useAuth(): UseAuthResult {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
@@ -74,6 +80,7 @@ export function useAuth(): UseAuthResult {
   }, []);
 
   async function signUp(email: string, password: string, displayName?: string): Promise<AuthResult> {
+    if (!supabase) return { error: "Supabase is not configured. Running in guest mode." };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -86,11 +93,16 @@ export function useAuth(): UseAuthResult {
   }
 
   async function signIn(email: string, password: string): Promise<AuthResult> {
+    if (!supabase) return { error: "Supabase is not configured. Running in guest mode." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? error.message : null };
   }
 
   async function signOut(): Promise<void> {
+    if (!supabase) {
+      setUser(null);
+      return;
+    }
     const { error } = await supabase.auth.signOut();
     if (error) console.warn("[moneyverse] signOut failed", error.message);
   }

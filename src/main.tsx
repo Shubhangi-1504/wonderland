@@ -6,6 +6,7 @@ import "./index.css";
 import { initGlobalErrors } from "./lib/globalErrors";
 import { initDemoMode } from "./lib/demoMode";
 import { initSync } from "./store/syncWithSupabase";
+import { ErrorBoundary } from "./lib/ErrorBoundary";
 
 // Global window error & unhandledrejection handlers (fire-and-forget, never throws)
 initGlobalErrors();
@@ -19,7 +20,9 @@ initSync();
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </BrowserRouter>
   </React.StrictMode>,
 );

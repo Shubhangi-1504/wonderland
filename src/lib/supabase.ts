@@ -1,18 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Supabase browser client.
  * Env vars are public by design (anon key + RLS); the service role key must never be used here.
- * When the env vars are missing we still create a client pointed at a placeholder
- * host, so imports never crash. Every call fails gracefully (auth = signed out,
- * persistence no-ops) and `isSupabaseConfigured` gates optional features.
+ *
+ * Guest/no-env fallback: if VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY are
+ * missing (no .env, preview build, etc.), we return null so the app still renders
+ * in guest/localStorage mode instead of throwing at module-load time.
  */
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const isSupabaseConfigured = Boolean(url && anonKey);
-
-export const supabase = createClient(
-  url || "https://placeholder-project.supabase.co",
-  anonKey || "placeholder-anon-key",
-);
+export const supabase = (() => {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (url && key) {
+    return createClient(url, key) as SupabaseClient;
+  }
+  return null as unknown as SupabaseClient;
+})();

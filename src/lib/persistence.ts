@@ -25,6 +25,7 @@ function toNumber(value: unknown, fallback: number): number {
  * A user with no rows yet gets defaults, which the sync layer treats as "empty".
  */
 export async function loadProgress(): Promise<RemoteProgress | null> {
+  if (!supabase) return null;
   const userId = await getCurrentUserId();
   if (!userId) return null;
 
@@ -65,6 +66,7 @@ export async function loadProgress(): Promise<RemoteProgress | null> {
 
 /** Upsert the whole portfolio. Returns true on success. */
 export async function savePortfolio(portfolio: Portfolio): Promise<boolean> {
+  if (!supabase) return false;
   const userId = await getCurrentUserId();
   if (!userId) return false; // guest: no-op
 
@@ -91,6 +93,7 @@ export async function saveMissionProgress(
   id: string,
   data: { completed: boolean; quizScore?: number },
 ): Promise<boolean> {
+  if (!supabase) return false;
   const userId = await getCurrentUserId();
   if (!userId) return false; // guest: no-op
 
@@ -114,6 +117,7 @@ export async function saveMissionProgress(
 
 /** Write the absolute XP total (not a delta). Returns true on success. */
 export async function addXPRemote(newTotal: number): Promise<boolean> {
+  if (!supabase) return false;
   const userId = await getCurrentUserId();
   if (!userId) return false; // guest: no-op
 

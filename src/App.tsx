@@ -7,7 +7,7 @@ import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
-import { resetIntro } from "./scene/sceneStore";
+import { ChatLauncher } from "./ai/ChatLauncher";
 
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
