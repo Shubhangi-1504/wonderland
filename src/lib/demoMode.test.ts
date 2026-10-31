@@ -29,7 +29,8 @@ describe("demoMode", () => {
     };
 
     (globalThis as unknown as { localStorage: typeof fakeLocalStorage }).localStorage = fakeLocalStorage;
-    (globalThis as unknown as { window: { location: { search: string; href: string; pathname: string }; history: { replaceState: () => void } } }).window = {
+    (globalThis as unknown as { window: { localStorage: typeof fakeLocalStorage; location: { search: string; href: string; pathname: string }; history: { replaceState: () => void } } }).window = {
+      localStorage: fakeLocalStorage,
       location: {
         search: "",
         href: "http://localhost:5173",

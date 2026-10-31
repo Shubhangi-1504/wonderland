@@ -44,6 +44,28 @@ export const useGameStore = create<GameState>()(
       setScenarioResult: (lastScenarioResult) => set({ lastScenarioResult }),
       setHasEntered: (hasEntered) => set({ hasEntered }),
     }),
-    { name: "moneyverse-game" },
+    {
+      name: "moneyverse-game",
+      storage: {
+        getItem: (name) => {
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          if (!storage) return null;
+          const str = storage.getItem(name);
+          return str ? JSON.parse(str) : null;
+        },
+        setItem: (name, value) => {
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          if (storage) {
+            storage.setItem(name, JSON.stringify(value));
+          }
+        },
+        removeItem: (name) => {
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          if (storage) {
+            storage.removeItem(name);
+          }
+        },
+      },
+    },
   ),
 );

@@ -73,7 +73,7 @@ export function TradePanel({ companyId, compact = false }: TradePanelProps) {
   const canSell = heldQty > 0 && isValidQty && qty <= heldQty;
 
   const isBuyDisabled = !isValidQty || !canAfford;
-  const isSellDisabled = heldQty === 0 || !isValidQty || qty > heldQty;
+  const isSellDisabled = !canSell;
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function showSuccess(msg: string) {
