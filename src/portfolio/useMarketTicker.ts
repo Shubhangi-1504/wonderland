@@ -46,7 +46,11 @@ export function useMarketTicker({
     };
 
     const onVisibility = () => {
-      document.visibilityState === 'visible' ? start() : stop();
+      if (document.visibilityState === 'visible') {
+        start();
+      } else {
+        stop();
+      }
     };
 
     // Start immediately if the tab is already visible.

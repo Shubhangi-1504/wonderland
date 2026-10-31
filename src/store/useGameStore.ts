@@ -48,19 +48,19 @@ export const useGameStore = create<GameState>()(
       name: "moneyverse-game",
       storage: {
         getItem: (name) => {
-          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as unknown as { localStorage?: Storage }).localStorage;
           if (!storage) return null;
           const str = storage.getItem(name);
           return str ? JSON.parse(str) : null;
         },
         setItem: (name, value) => {
-          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as unknown as { localStorage?: Storage }).localStorage;
           if (storage) {
             storage.setItem(name, JSON.stringify(value));
           }
         },
         removeItem: (name) => {
-          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as any).localStorage;
+          const storage = typeof window !== "undefined" && window.localStorage ? window.localStorage : (globalThis as unknown as { localStorage?: Storage }).localStorage;
           if (storage) {
             storage.removeItem(name);
           }
