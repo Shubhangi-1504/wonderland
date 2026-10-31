@@ -1,4 +1,5 @@
 import type { ChatMessage } from "../types";
+import { track } from "../lib/track";
 import { buildContext, type GuidePayload } from "./buildContext";
 import { getFallbackReply } from "./fallbacks";
 
@@ -20,10 +21,10 @@ export async function askGuide(
 ): Promise<GuideReply> {
   const payload = context ?? buildContext();
   const lastUserText = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
-  const offline = (): GuideReply => ({
-    reply: getFallbackReply(lastUserText, payload),
-    fallback: true,
-  });
+  const offline = (reason: string): GuideReply => {
+    track("fallback_shown", { reason });
+    return { reply: getFallbackReply(lastUserText, payload), fallback: true };
+  };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -35,19 +36,22 @@ export async function askGuide(
       body: JSON.stringify({
         messages,
         portfolio: payload.portfolio,
-        lastEvent: payload.lastEvent,
+        // Precomputed, authoritative facts replace the raw event dump.
+        facts: payload.facts,
       }),
       signal: controller.signal,
     });
 
-    if (!res.ok) return offline();
+    if (!res.ok) return offline(`http_${res.status}`);
 
     const data = (await res.json()) as { reply?: unknown; fallback?: boolean };
-    if (data.fallback || typeof data.reply !== "string" || !data.reply.trim()) return offline();
+    if (data.fallback || typeof data.reply !== "string" || !data.reply.trim()) {
+      return offline("server_fallback");
+    }
 
     return { reply: data.reply, fallback: false };
   } catch {
-    return offline();
+    return offline("network");
   } finally {
     clearTimeout(timer);
   }

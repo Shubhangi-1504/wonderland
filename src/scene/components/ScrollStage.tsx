@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
-import { scrollRuntime } from '../sceneStore';
+import { enterState, scrollRuntime, startEnterWorld } from '../sceneStore';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -24,9 +24,15 @@ export function ScrollStage() {
       end: 'bottom bottom',
       onUpdate: (self) => {
         scrollRuntime.target = self.progress * 4;
+        if (self.progress >= 0.88 && !enterState.active) {
+          startEnterWorld();
+        }
       },
       onRefresh: (self) => {
         scrollRuntime.target = self.progress * 4;
+        if (self.progress >= 0.88 && !enterState.active) {
+          startEnterWorld();
+        }
       },
     });
     return () => st.kill();

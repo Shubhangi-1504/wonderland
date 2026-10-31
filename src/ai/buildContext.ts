@@ -1,5 +1,6 @@
 import { useGameStore } from "../store/useGameStore";
 import type { ScenarioResult } from "../types";
+import { explainScenario, type ScenarioFacts } from "./explainScenario";
 
 /** Compact, prompt-sized snapshot of the player's simulated portfolio. */
 export interface GuidePayload {
@@ -23,6 +24,8 @@ export interface GuidePayload {
     changePct: number;
     perHolding: { symbol: string; before: number; after: number; changePct: number }[];
   } | null;
+  /** Precomputed, authoritative facts. Sent to /api/chat in place of raw event data. */
+  facts: ScenarioFacts;
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
@@ -64,6 +67,7 @@ export function buildContext(): GuidePayload {
   return {
     portfolio: { cash: round(cash), totalValue: round(cash + holdingsValue), holdings },
     lastEvent: summarizeEvent(lastScenarioResult),
+    facts: explainScenario(portfolio, stocks, lastScenarioResult),
   };
 }
 

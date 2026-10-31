@@ -1,8 +1,7 @@
-export function PortfolioPage() {
-  return (
-    <main className="flex min-h-[70vh] flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-bold text-purple">Portfolio</h1>
-      <p className="text-lg text-slate-300">Portfolio - Person C</p>
-    </main>
-  );
-}
+/**
+ * /portfolio route stub — routes to the real screen.
+ *
+ * This file is kept minimal so Person D's router doesn't need to change.
+ * All real rendering lives in PortfolioScreen.tsx.
+ */
+export { PortfolioScreen as PortfolioPage } from './PortfolioScreen';
