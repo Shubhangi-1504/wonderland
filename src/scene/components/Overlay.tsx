@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { startEnterWorld, useSceneStore } from '../sceneStore';
+import { enterState, useSceneStore } from '../sceneStore';
 import { scrollToScene } from './ScrollStage';
 
 /** @see src/scene/sceneStore.ts — used by ?debug Replay. */
@@ -169,20 +169,27 @@ export function Overlay({ isDebug, toggleDebug }: {
   const setCrash = useSceneStore((s) => s.setCrash);
   const gamePhase = useSceneStore((s) => s.gamePhase);
 
-  /* ENTER THE WORLD: dash + burst is handled by the rig; flash here, then the store flips */
-  const handleEnter = () => {
-    if (enterHandled.current) return;
-    enterHandled.current = true;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!reduced && flash.current) {
-      gsap.fromTo(
-        flash.current,
-        { opacity: 0 },
-        { opacity: 0.7, duration: 0.4, ease: 'power2.in', yoyo: true, repeat: 1 },
-      );
-    }
-    startEnterWorld();
-  };
+  /* Trigger flash when the dive reaches the portal and enterState activates */
+  useEffect(() => {
+    let raf = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      if (useSceneStore.getState().gamePhase === 'world') return;
+      if (enterState.active && !enterHandled.current) {
+        enterHandled.current = true;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduced && flash.current) {
+          gsap.fromTo(
+            flash.current,
+            { opacity: 0 },
+            { opacity: 0.7, duration: 0.4, ease: 'power2.in', yoyo: true, repeat: 1 },
+          );
+        }
+      }
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   return (
     <div
@@ -294,15 +301,6 @@ export function Overlay({ isDebug, toggleDebug }: {
             >
               {s.tagline}
             </p>
-            {i === 4 && (
-              <button
-                type="button"
-                onClick={handleEnter}
-                className="mv-focus mv-enter-btn font-oswald pointer-events-auto mt-9 rounded-full bg-gradient-to-r from-[#ffc65c] to-[#38e8ff] px-12 py-4 text-sm tracking-[0.38em] text-[#0a0820] shadow-[0_0_45px_rgba(255,198,92,0.4)] transition-transform hover:scale-105"
-              >
-                ENTER THE WORLD
-              </button>
-            )}
           </div>
         </section>
       ))}

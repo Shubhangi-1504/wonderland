@@ -1,0 +1,4 @@
+import { BUILDINGS_DATA, VIRTUAL_COMPANIES } from './buildings';
+
+export const COMPANIES = BUILDINGS_DATA;
+export { BUILDINGS_DATA, VIRTUAL_COMPANIES };
