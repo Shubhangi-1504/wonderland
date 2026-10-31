@@ -40,18 +40,23 @@ export function buildContext(): GuidePayload {
   const cash = portfolio?.cash ?? 0;
   const priceBySymbol = new Map((stocks ?? []).map((stock) => [stock.symbol, stock]));
 
-  const holdings = (portfolio?.holdings ?? []).map((holding) => {
+    const holdings = (portfolio?.holdings ?? []).flatMap((holding) => {
+    // Skip malformed rows that have no symbol.
+    if (!holding.symbol) return [];
     const stock = priceBySymbol.get(holding.symbol);
     // Without a live quote, fall back to the average purchase price.
     const price = typeof stock?.price === "number" ? stock.price : null;
-    return {
-      symbol: holding.symbol,
-      qty: holding.qty,
-      avgPrice: holding.avgPrice,
-      sector: stock?.sector ?? null,
-      price,
-      value: round((price ?? holding.avgPrice) * holding.qty),
-    };
+    const avgPrice = holding.avgPrice ?? 0;
+    return [
+      {
+        symbol: holding.symbol,
+        qty: holding.qty,
+        avgPrice,
+        sector: stock?.sector ?? null,
+        price,
+        value: round((price ?? avgPrice) * holding.qty),
+      },
+    ];
   });
 
   const holdingsValue = holdings.reduce((sum, holding) => sum + holding.value, 0);

@@ -5,6 +5,7 @@ import { UserBadge } from "./auth/UserBadge";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
+import { ChatLauncher } from "./ai/ChatLauncher";
 
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {

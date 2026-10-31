@@ -191,6 +191,10 @@ export function initSync(): () => void {
   if (started) return () => {};
   started = true;
 
+  if (!supabase) {
+    return () => {};
+  }
+
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       // Defer: awaiting Supabase auth calls inside this callback can deadlock supabase-js.
