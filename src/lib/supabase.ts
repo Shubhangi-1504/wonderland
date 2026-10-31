@@ -1,5 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+export const isSupabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
 /**
  * Supabase browser client.
  * Env vars are public by design (anon key + RLS); the service role key must never be used here.
@@ -11,7 +15,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export const supabase = (() => {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (url && key) {
+  if (isSupabaseConfigured && url && key) {
     return createClient(url, key) as SupabaseClient;
   }
   return null as unknown as SupabaseClient;

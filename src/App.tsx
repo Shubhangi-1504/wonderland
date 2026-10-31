@@ -1,13 +1,13 @@
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { Suspense } from "react";
 import { ChatLauncher } from "./ai/ChatLauncher";
+import { resetIntro } from "./scene/sceneStore";
 import { AuthModal } from "./auth/AuthModal";
 import { UserBadge } from "./auth/UserBadge";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { IntroPage } from "./scene/IntroPage";
 import { WorldPage } from "./world/WorldPage";
 import { PortfolioPage } from "./portfolio/PortfolioPage";
-import { ChatLauncher } from "./ai/ChatLauncher";
 
 /** Minimal temporary nav so everyone can move between areas while building. */
 function NavBar() {
